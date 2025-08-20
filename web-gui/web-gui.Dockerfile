@@ -9,6 +9,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application files
 COPY app.py .
 COPY translation_agent_card.json .
+
+# Copy templates and static directories
 COPY templates/ templates/
 COPY static/ static/
 

@@ -45,10 +45,29 @@ That's it! The `azd up` command will:
 1. Azure subscription
 2. Azure CLI installed
 3. Azure Developer CLI (azd) installed
-4. Terraform installed
-5. Docker installed (for building images)
+4. Docker Desktop installed and running
+5. Git installed
 
 ## Deployment Steps
+
+### Clone the Repository
+
+First, clone this repository to your local machine:
+
+```bash
+git clone https://github.com/passadis/azure-a2a-translation.git
+cd azure-a2a-translation
+```
+
+### Start Docker
+
+Make sure Docker Desktop is running before deployment:
+
+```bash
+# On Windows, start Docker Desktop application
+# On Linux/macOS, ensure Docker daemon is running
+docker --version
+```
 
 ### Option 1: One-Command Deployment (Recommended)
 
@@ -66,7 +85,6 @@ If you prefer to see each step:
 ### 1. Initialize Azure Developer CLI
 
 ```bash
-cd new_a2a
 azd auth login
 azd init
 ```
@@ -202,6 +220,27 @@ The services are configured through environment variables:
 
 ## Troubleshooting
 
+### Common Issues
+
+#### Docker Build Fails
+- **Issue**: Docker build fails with "no such file or directory"
+- **Solution**: Ensure Docker Desktop is running and you're in the correct directory:
+  ```bash
+  docker --version
+  cd azure-a2a-translation
+  ```
+
+#### Missing .env File Error
+- **Issue**: Build fails because .env file is missing
+- **Solution**: The Dockerfiles now handle missing .env files automatically. If you still see issues, create an empty .env file:
+  ```bash
+  touch .env
+  ```
+
+#### Static Directory Missing (Web GUI)
+- **Issue**: Web GUI build fails due to missing static directory
+- **Solution**: The static directory and basic files are now included in the repository. If missing, they will be created automatically during build.
+
 ### Check Container Logs
 ```bash
 azd logs
@@ -212,6 +251,19 @@ Use Azure Storage Explorer or Azure Portal to check queue status
 
 ### Test Managed Identity
 Check that the Container Apps have the correct identity assignments in the Azure Portal
+
+### Docker Build Locally (for testing)
+```bash
+# Test translation agent build
+docker build -f translation-agent.Dockerfile -t test-agent .
+
+# Test translation worker build  
+docker build -f translation-worker.Dockerfile -t test-worker .
+
+# Test web GUI build
+cd web-gui
+docker build -f web-gui.Dockerfile -t test-web-gui .
+```
 
 ## Cleanup
 

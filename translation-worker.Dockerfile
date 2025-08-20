@@ -12,7 +12,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the current directory contents into the container at /app
 COPY translation_worker_azure.py .
-COPY .env .
+
+# Copy .env if it exists, create empty one if not
+COPY .env* ./
+RUN if [ ! -f .env ]; then touch .env; fi
 
 # Run the worker application
 CMD ["python", "translation_worker_azure.py"]
