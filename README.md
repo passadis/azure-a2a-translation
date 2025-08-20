@@ -136,6 +136,7 @@ azd env get-values
 Access your deployed application:
 - **Web GUI**: Open `WEB_GUI_URL` in your browser for the translation interface
 - **Translation API**: Use `TRANSLATION_AGENT_URL` for direct API access
+- **Agent Card**: Get the dynamic agent configuration at `WEB_GUI_URL/agent-card`
 
 ## Usage
 
@@ -177,6 +178,16 @@ curl "https://your-translation-agent-url/task_status/test-123"
 ```bash
 curl "https://your-translation-agent-url/health"
 curl "https://your-web-gui-url/health"
+```
+
+### Get Agent Configuration
+
+```bash
+# Get dynamic agent card with current endpoints
+curl "https://your-web-gui-url/agent-card"
+
+# Get agent card file content (updated at runtime)
+curl "https://your-web-gui-url/agent-card-file"
 ```
 
 ## Configuration

@@ -41,6 +41,76 @@ def health():
     """Health check endpoint."""
     return jsonify({"status": "healthy", "service": "web-gui"}), 200
 
+@app.route('/agent-card')
+def get_agent_card():
+    """Returns the translation agent card with dynamic endpoints."""
+    try:
+        if not TRANSLATION_AGENT_URL:
+            return jsonify({"error": "TRANSLATION_AGENT_URL not configured"}), 500
+            
+        agent_card = {
+            "agent_id": "translation-agent-v1",
+            "name": "Azure Asynchronous Text Translation Agent",
+            "description": "An agent that receives text translation tasks asynchronously using Azure AI Translator, deployed on Azure Container Apps.",
+            "skills": [
+                {
+                    "skill_name": "translate_text",
+                    "endpoint": f"{TRANSLATION_AGENT_URL}/execute_task",
+                    "status_endpoint": f"{TRANSLATION_AGENT_URL}/get_task_status",
+                    "input_format": {
+                        "type": "object",
+                        "properties": {
+                            "envelope": {
+                                "type": "object",
+                                "properties": {
+                                    "task_id": {"type": "string"},
+                                    "target_language": {"type": "string", "example": "el"}
+                                }
+                            },
+                            "parts": {
+                                "type": "object",
+                                "properties": {
+                                    "document_content": {"type": "string"}
+                                }
+                            }
+                        }
+                    },
+                    "output_format": {
+                        "type": "object",
+                        "properties": {
+                            "status": {"type": "string", "enum": ["pending", "completed", "failed"]},
+                            "artifact": {
+                                "type": "object",
+                                "properties": {
+                                    "artifact_content": {"type": "string"}
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+        return jsonify(agent_card), 200
+    except Exception as e:
+        logger.error(f"Error generating agent card: {e}")
+        return jsonify({"error": "Failed to generate agent card"}), 500
+
+@app.route('/agent-card-file')
+def get_agent_card_file():
+    """Returns the agent card file content with updated endpoints."""
+    try:
+        # Try to read the updated file first
+        try:
+            with open('translation_agent_card.json', 'r') as f:
+                agent_card = json.load(f)
+            return jsonify(agent_card), 200
+        except FileNotFoundError:
+            # Fallback to dynamic generation
+            return get_agent_card()
+    except Exception as e:
+        logger.error(f"Error reading agent card file: {e}")
+        return jsonify({"error": "Failed to read agent card file"}), 500
+
 @app.route('/upload-and-translate', methods=['POST'])
 def upload_and_translate():
     """
