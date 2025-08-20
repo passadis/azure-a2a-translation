@@ -46,7 +46,7 @@ infra/*.tfplan
 *.swp
 *.swo
 *.tmp
-template-gallery*
+template-gallery-entry.json
 # Node.js (if any JS/TS is added)
 node_modules/
 npm-debug.log*
