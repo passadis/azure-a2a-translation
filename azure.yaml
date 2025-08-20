@@ -56,20 +56,3 @@ hooks:
         "@ | Out-File -FilePath "requirements.txt" -Encoding UTF8
         }
       shell: pwsh
-  postprovision:
-    posix:
-      run: |
-        # Update translation_agent_card.json with actual Azure URLs
-        TRANSLATION_AGENT_URL=$(azd env get-values --output json | jq -r '.TRANSLATION_AGENT_URL')
-        echo "Updating agent card with URL: $TRANSLATION_AGENT_URL"
-        sed -i "s|\${TRANSLATION_AGENT_URL}|$TRANSLATION_AGENT_URL|g" web-gui/translation_agent_card.json
-    windows:
-      run: |
-        # Update translation_agent_card.json with actual Azure URLs
-        $envValues = azd env get-values --output json | ConvertFrom-Json
-        $translationAgentUrl = $envValues.TRANSLATION_AGENT_URL
-        Write-Host "Updating agent card with URL: $translationAgentUrl"
-        $content = Get-Content "web-gui/translation_agent_card.json" -Raw
-        $content = $content -replace '\$\{TRANSLATION_AGENT_URL\}', $translationAgentUrl
-        Set-Content "web-gui/translation_agent_card.json" -Value $content
-      shell: pwsh
