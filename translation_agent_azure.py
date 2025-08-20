@@ -136,6 +136,68 @@ def health_check():
         return jsonify({"status": "unhealthy", "error": str(e)}), 503
 
 
+@app.route('/agent-card', methods=['GET'])
+def get_agent_card():
+    """
+    Discovery endpoint - returns the agent's capabilities and endpoints.
+    This allows other services to discover how to interact with this agent.
+    """
+    try:
+        # Get the current host URL (this agent's URL)
+        # In Container Apps, we can get this from environment or construct it
+        agent_url = request.url_root.rstrip('/')
+        
+        agent_card = {
+            "agent_id": "translation-agent-v1",
+            "name": "Azure Asynchronous Text Translation Agent",
+            "description": "An agent that receives text translation tasks asynchronously using Azure AI Translator, deployed on Azure Container Apps.",
+            "skills": [
+                {
+                    "skill_name": "translate_text",
+                    "endpoint": f"{agent_url}/execute_task",
+                    "status_endpoint": f"{agent_url}/task_status",
+                    "input_format": {
+                        "type": "object",
+                        "properties": {
+                            "envelope": {
+                                "type": "object",
+                                "properties": {
+                                    "task_id": {"type": "string"},
+                                    "target_language": {"type": "string", "example": "el"}
+                                }
+                            },
+                            "parts": {
+                                "type": "object",
+                                "properties": {
+                                    "document_content": {"type": "string"}
+                                }
+                            }
+                        }
+                    },
+                    "output_format": {
+                        "type": "object",
+                        "properties": {
+                            "status": {"type": "string", "enum": ["pending", "completed", "failed"]},
+                            "artifact": {
+                                "type": "object",
+                                "properties": {
+                                    "artifact_content": {"type": "string"}
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+        
+        logger.info(f"Agent card requested, returning endpoints for: {agent_url}")
+        return jsonify(agent_card), 200
+        
+    except Exception as e:
+        logger.error(f"Error generating agent card: {e}")
+        return jsonify({"error": "Failed to generate agent card"}), 500
+
+
 @app.route('/')
 def index():
     """
