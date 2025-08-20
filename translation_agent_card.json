@@ -1,0 +1,42 @@
+{
+    "agent_id": "translation-agent-v1",
+    "name": "Asynchronous Text Translation Agent",
+    "description": "An agent that receives text translation tasks asynchronously using Azure AI Translator.",
+    "skills": [
+        {
+            "skill_name": "translate_text",
+            "endpoint": "http://localhost:5203/execute_task",
+            "status_endpoint": "http://localhost:5203/get_task_status",
+            "input_format": {
+                "type": "object",
+                "properties": {
+                    "envelope": {
+                        "type": "object",
+                        "properties": {
+                            "task_id": {"type": "string"},
+                            "target_language": {"type": "string", "example": "el"}
+                        }
+                    },
+                    "parts": {
+                        "type": "object",
+                        "properties": {
+                            "document_content": {"type": "string"}
+                        }
+                    }
+                }
+            },
+            "output_format": {
+                "type": "object",
+                "properties": {
+                    "status": {"type": "string", "enum": ["pending", "completed", "failed"]},
+                    "artifact": {
+                        "type": "object",
+                        "properties": {
+                            "artifact_content": {"type": "string"}
+                        }
+                    }
+                }
+            }
+        }
+    ]
+}

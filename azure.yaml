@@ -1,0 +1,75 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+
+name: translation-a2a
+metadata:
+  template: azd-init@1.14.0
+
+infra:
+  provider: terraform
+
+services:
+  translation-agent:
+    project: .
+    host: containerapp
+    language: python
+    docker:
+      path: translation-agent.Dockerfile
+  translation-worker:
+    project: .
+    host: containerapp
+    language: python
+    docker:
+      path: translation-worker.Dockerfile
+  web-gui:
+    project: ./web-gui
+    host: containerapp
+    language: python
+
+hooks:
+  preprovision:
+    posix:
+      run: |
+        # Ensure required files exist
+        if [ ! -f "requirements.txt" ]; then
+          echo "Creating requirements.txt..."
+          cat > requirements.txt << 'EOF'
+        flask==2.3.3
+        python-dotenv==1.0.0
+        requests==2.31.0
+        azure-storage-queue==12.7.0
+        azure-identity==1.14.0
+        azure-core==1.28.0
+        EOF
+        fi
+    windows:
+      run: |
+        # Ensure required files exist
+        if (!(Test-Path "requirements.txt")) {
+          Write-Host "Creating requirements.txt..."
+          @"
+        flask==2.3.3
+        python-dotenv==1.0.0
+        requests==2.31.0
+        azure-storage-queue==12.7.0
+        azure-identity==1.14.0
+        azure-core==1.28.0
+        "@ | Out-File -FilePath "requirements.txt" -Encoding UTF8
+        }
+      shell: pwsh
+  postprovision:
+    posix:
+      run: |
+        # Update translation_agent_card.json with actual Azure URLs
+        TRANSLATION_AGENT_URL=$(azd env get-values --output json | jq -r '.TRANSLATION_AGENT_URL')
+        echo "Updating agent card with URL: $TRANSLATION_AGENT_URL"
+        sed -i "s|\${TRANSLATION_AGENT_URL}|$TRANSLATION_AGENT_URL|g" web-gui/translation_agent_card.json
+    windows:
+      run: |
+        # Update translation_agent_card.json with actual Azure URLs
+        $envValues = azd env get-values --output json | ConvertFrom-Json
+        $translationAgentUrl = $envValues.TRANSLATION_AGENT_URL
+        Write-Host "Updating agent card with URL: $translationAgentUrl"
+        $content = Get-Content "web-gui/translation_agent_card.json" -Raw
+        $content = $content -replace '\$\{TRANSLATION_AGENT_URL\}', $translationAgentUrl
+        Set-Content "web-gui/translation_agent_card.json" -Value $content
+      shell: pwsh
