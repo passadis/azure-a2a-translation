@@ -131,6 +131,30 @@ resource "azurerm_storage_account" "main" {
 # Note: Storage queues will be created programmatically by the applications using managed identity
 # This avoids the Terraform key-based authentication requirement
 
+# Storage Queues
+resource "azurerm_storage_queue" "translation_jobs" {
+  name                 = "translation-jobs"
+  storage_account_name = azurerm_storage_account.main.name
+  
+  depends_on = [azurerm_storage_account.main]
+}
+
+resource "azurerm_storage_queue" "translation_results" {
+  name                 = "translation-results"
+  storage_account_name = azurerm_storage_account.main.name
+  
+  depends_on = [azurerm_storage_account.main]
+}
+
+# Storage Container for results
+resource "azurerm_storage_container" "translation_results" {
+  name                  = "translation-results"
+  storage_account_name  = azurerm_storage_account.main.name
+  container_access_type = "private"
+  
+  depends_on = [azurerm_storage_account.main]
+}
+
 # Role assignment for managed identity to access storage
 resource "azurerm_role_assignment" "storage_queue_data_contributor" {
   scope                = azurerm_storage_account.main.id
@@ -254,6 +278,16 @@ resource "azurerm_container_app" "translation_agent" {
       env {
         name  = "AZURE_CLIENT_ID"
         value = azurerm_user_assigned_identity.main.client_id
+      }
+      
+      env {
+        name  = "TRANSLATION_JOBS_QUEUE"
+        value = "translation-jobs"
+      }
+      
+      env {
+        name  = "TRANSLATION_RESULTS_QUEUE"
+        value = "translation-results"
       }
     }
   }

@@ -23,6 +23,18 @@
             align-items: center;
             z-index: 10;
         }
+        #clear-history-btn {
+            background-color: #ffffff;
+            border: 2px solid #6c757d;
+            color: #495057;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        #clear-history-btn:hover {
+            background-color: #e9ecef;
+            border-color: #495057;
+            color: #212529;
+        }
     </style>
 </head>
 <body>
@@ -59,7 +71,10 @@
         </div>
         
         <div class="card mt-4">
-            <h5 class="card-header">Translation History</h5>
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Translation History</h5>
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="clear-history-btn">Clear History</button>
+            </div>
             <div class="card-body">
                 <ul class="list-group" id="history-list">
                     <li class="list-group-item text-muted">No completed translations yet.</li>
@@ -111,6 +126,14 @@
                     if (data.status === 'pending') {
                         // The task has been submitted successfully, now start polling
                         const task_id = data.task_id;
+                        
+                        // Hide loading overlay immediately - this enables true non-blocking UX!
+                        overlay.style.display = 'none';
+                        
+                        // Reset form to allow immediate new submissions
+                        document.getElementById('translate-form').reset();
+                        document.querySelector('.custom-file-label').innerHTML = 'Choose file';
+                        
                         startPolling(task_id, file.name, targetLanguage);
                     } else {
                         // Handle errors from the backend
@@ -131,7 +154,6 @@
 
         // --- Polling function ---
         async function startPolling(taskId, fileName, targetLanguage) {
-            const overlay = document.getElementById('loading-overlay');
             const historyList = document.getElementById('history-list');
             const listItemId = `task-${taskId}`;
             
@@ -160,7 +182,9 @@
                     const resultItem = document.getElementById(listItemId);
                     resultItem.innerHTML = `<strong>${fileName}</strong> - Translation to <strong>${targetLanguage.toUpperCase()}</strong>:
                         <pre class="mt-2 p-2 bg-light border">${data.artifact_content}</pre>`;
-                    overlay.style.display = 'none';
+                    
+                    // Limit history to 5 items
+                    limitHistoryItems();
                     
                 } else if (data.status === 'error' || data.status === 'failed' || data.status === 'not_found') {
                     // Task failed or was not found, stop polling
@@ -168,10 +192,29 @@
                     
                     const resultItem = document.getElementById(listItemId);
                     resultItem.innerHTML = `<strong class="text-danger">${fileName}</strong> - Translation failed: ${data.message || data.error}`;
-                    overlay.style.display = 'none';
+                    
+                    // Limit history to 5 items
+                    limitHistoryItems();
                 }
             }, pollInterval);
         }
+
+        // Limit history to 5 items
+        function limitHistoryItems() {
+            const historyList = document.getElementById('history-list');
+            const items = historyList.children;
+            
+            // Remove excess items (keep max 5, plus the "no translations" placeholder)
+            while (items.length > 6) {
+                historyList.removeChild(items[items.length - 1]);
+            }
+        }
+
+        // Clear history button functionality
+        document.getElementById('clear-history-btn').addEventListener('click', function() {
+            const historyList = document.getElementById('history-list');
+            historyList.innerHTML = '<li class="list-group-item text-muted">No completed translations yet.</li>';
+        });
     </script>
 </body>
 </html>

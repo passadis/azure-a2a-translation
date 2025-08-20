@@ -21,6 +21,7 @@ logger = logging.getLogger(__name__)
 AZURE_STORAGE_ACCOUNT_NAME = os.getenv("AZURE_STORAGE_ACCOUNT_NAME")
 AZURE_TRANSLATOR_ENDPOINT = os.getenv("AZURE_TRANSLATOR_ENDPOINT")
 AZURE_TRANSLATOR_REGION = os.getenv("AZURE_TRANSLATOR_REGION")
+AZURE_TRANSLATOR_RESOURCE_ID = os.getenv("AZURE_TRANSLATOR_RESOURCE_ID")
 TRANSLATION_JOBS_QUEUE = os.getenv("TRANSLATION_JOBS_QUEUE", "translation-jobs")
 TRANSLATION_RESULTS_QUEUE = os.getenv("TRANSLATION_RESULTS_QUEUE", "translation-results")
 
@@ -76,7 +77,9 @@ def translate_text_with_azure(text, target_language="el"):
         headers = {
             'Authorization': f'Bearer {token.token}',
             'Content-type': 'application/json',
-            'X-ClientTraceId': str(uuid.uuid4())
+            'X-ClientTraceId': str(uuid.uuid4()),
+            'Ocp-Apim-ResourceId': AZURE_TRANSLATOR_RESOURCE_ID or '/subscriptions/9d47bf93-091d-480e-a512-1e918864fee7/resourceGroups/rg-sets/providers/Microsoft.CognitiveServices/accounts/cog-sets',
+            'Ocp-Apim-Subscription-Region': AZURE_TRANSLATOR_REGION
         }
 
         body = [{'text': text}]
@@ -120,22 +123,27 @@ def process_queue_message(queue_client, message):
         blob_service_client = get_blob_service_client()
         container_name = "translation-results"
         blob_name = f"{task_id}.json"
-        
         try:
-            # Ensure container exists
             blob_service_client.create_container(container_name)
         except ResourceExistsError:
-            pass  # Container already exists
-        
-        # Upload result to blob
+            pass
         blob_client = blob_service_client.get_blob_client(container=container_name, blob=blob_name)
         result_json = json.dumps(result_payload, indent=2)
         blob_client.upload_blob(result_json, overwrite=True)
-        
+
+        # Send result to translation-results queue
+        queue_service_client = get_queue_service_client()
+        results_queue_client = queue_service_client.get_queue_client(TRANSLATION_RESULTS_QUEUE)
+        try:
+            results_queue_client.create_queue()
+        except ResourceExistsError:
+            pass
+        results_queue_client.send_message(result_json)
+
         # Delete the processed message from the jobs queue
         queue_client.delete_message(message.id, message.pop_receipt)
-        
-        logger.info(f"Task {task_id} completed successfully and saved to blob storage")
+
+        logger.info(f"Task {task_id} completed successfully, saved to blob storage, and sent to results queue")
         
     except json.JSONDecodeError as e:
         logger.error(f"Invalid message format: {e}")
@@ -183,6 +191,13 @@ def start_worker():
             
         jobs_queue_client = queue_service_client.get_queue_client(TRANSLATION_JOBS_QUEUE)
         
+        # Log queue statistics
+        try:
+            queue_properties = jobs_queue_client.get_queue_properties()
+            logger.info(f"Queue properties - Approximate message count: {queue_properties.approximate_message_count}")
+        except Exception as e:
+            logger.warning(f"Could not get queue properties: {e}")
+        
         logger.info("Successfully connected to Azure Storage Queue")
             
     except Exception as e:
@@ -193,20 +208,27 @@ def start_worker():
     while True:
         try:
             # Receive messages from the jobs queue
+            logger.info(f"Polling queue '{TRANSLATION_JOBS_QUEUE}' for messages...")
             messages = jobs_queue_client.receive_messages(
                 messages_per_page=1,
                 visibility_timeout=MESSAGE_VISIBILITY_TIMEOUT
             )
             
             message_processed = False
+            message_count = 0
             for message in messages:
+                message_count += 1
+                logger.info(f"Found message {message_count}: ID={message.id}, Content preview: {message.content[:100]}...")
                 process_queue_message(jobs_queue_client, message)
                 message_processed = True
                 break  # Process one message at a time
             
             if not message_processed:
                 # No messages available, wait before next poll
+                logger.info(f"No messages found in queue. Waiting {POLL_INTERVAL_SECONDS} seconds...")
                 time.sleep(POLL_INTERVAL_SECONDS)
+            else:
+                logger.info(f"Processed {message_count} message(s). Continuing immediately...")
                 
         except KeyboardInterrupt:
             logger.info("Worker stopped by user.")
