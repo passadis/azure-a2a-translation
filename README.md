@@ -10,6 +10,11 @@ Deploy this entire solution to Azure with just two commands:
 azd auth login
 azd up
 ```
+## Remember you should have logged in with Azure CLI or switched to your target subscription:
+```bash
+az login
+az account set --subscription <your-subscription-id>
+```
 
 That's it! The `azd up` command will:
 - Initialize the project environment
