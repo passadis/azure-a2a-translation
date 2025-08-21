@@ -1,4 +1,13 @@
-# Translation A2A Service - Azure Deployment
+<p align="center">
+  <a href="https://skillicons.dev">
+    <img src="https://skillicons.dev/icons?i=azure,terraform,vscode,python,html,css,github" />
+  </a>
+</p>
+
+<h1 align="center">Translation A2A Service - Azure Deployment</h1>
+
+![a2a-main](https://github.com/user-attachments/assets/95145d93-3365-455e-9f86-7af365e785b7)
+
 
 This project implements an Agent-to-Agent (A2A) translation service using Azure Container Apps, Storage Queues, and AI Translator services.
 
