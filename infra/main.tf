@@ -352,6 +352,12 @@ resource "azurerm_container_app" "translation_worker" {
       }
       
       env {
+        name  = "AZURE_TRANSLATOR_RESOURCE_ID"
+        value = azurerm_cognitive_account.translator.id
+      }
+
+
+      env {
         name  = "AZURE_CLIENT_ID"
         value = azurerm_user_assigned_identity.main.client_id
       }
