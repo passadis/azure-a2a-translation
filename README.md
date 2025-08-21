@@ -201,9 +201,22 @@ The services are configured through environment variables:
 - `AZURE_STORAGE_ACCOUNT_NAME`: Storage account name (set by Terraform)
 - `AZURE_TRANSLATOR_ENDPOINT`: Translator service endpoint (set by Terraform)
 - `AZURE_TRANSLATOR_REGION`: Azure region (set by Terraform)
+- `AZURE_TRANSLATOR_RESOURCE_ID`: Translator resource ID for Entra ID authentication (set by Terraform)
 - `AZURE_CLIENT_ID`: Managed identity client ID (set by Terraform)
 - `TRANSLATION_JOBS_QUEUE`: Jobs queue name (default: "translation-jobs")
 - `TRANSLATION_RESULTS_QUEUE`: Results queue name (default: "translation-results")
+
+## User Experience
+
+### True Non-Blocking A2A Experience
+
+This template delivers a genuinely asynchronous Agent-to-Agent experience:
+
+1. **Immediate Response**: Submit translation requests and get instant confirmation
+2. **Stay Productive**: Continue submitting more translations while others process
+3. **Real-Time Updates**: See results appear automatically as they complete
+4. **No Waiting**: Never blocked waiting for translations to finish
+5. **History Management**: View up to 5 recent translations with clean history option
 
 ## Security Features
 
@@ -236,6 +249,29 @@ The services are configured through environment variables:
 ## Troubleshooting
 
 ### Common Issues
+
+### Common Issues
+
+#### Authentication Error (401 Unauthorized)
+- **Issue**: Translation worker gets "401 Client Error: Unauthorized" when calling Azure Translator
+- **Cause**: Missing Entra ID authentication headers for global endpoint
+- **Solution**: The template includes proper authentication headers (`Ocp-Apim-ResourceId` and `Ocp-Apim-Subscription-Region`). If you modify the code, ensure these headers are included when using the global translator endpoint.
+
+#### Queue Messages Not Processing
+- **Issue**: Translation worker shows "No messages found" even though agent is queuing messages
+- **Cause**: Worker crashed or stuck messages due to visibility timeout
+- **Solution**: Restart the translation worker:
+  ```bash
+  az containerapp revision restart --name translation-worker --resource-group <your-resource-group>
+  ```
+
+#### Worker Stops Processing After First Job
+- **Issue**: First translation succeeds, but subsequent jobs stay "pending"
+- **Cause**: Message visibility timeout or worker exception
+- **Solution**: Check worker logs and restart if needed:
+  ```bash
+  az containerapp logs show --name translation-worker --resource-group <your-resource-group> --follow
+  ```
 
 #### Docker Build Fails
 - **Issue**: Docker build fails with "no such file or directory"
