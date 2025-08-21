@@ -2,7 +2,7 @@
 
 name: translation-a2a
 metadata:
-  template: azd-init@1.14.0
+  template: azure-a2a-translation@1.0.0
 
 infra:
   provider: terraform

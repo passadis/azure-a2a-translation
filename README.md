@@ -2,6 +2,45 @@
 
 This project implements an Agent-to-Agent (A2A) translation service using Azure Container Apps, Storage Queues, and AI Translator services.
 
+## Deployment Steps
+
+### Initialize the Project
+
+```bash
+azd init --template passadis/azure-a2a-translation
+```
+### You will get asked to select an Environment name and the build takes over
+
+## ✨ What Makes This Template Special
+
+- **🎯 Complete End-to-End Solution**: Web GUI + API + Background Worker + AI Translation
+- **🔒 Security First**: Zero API keys - 100% Managed Identity authentication
+- **📦 Container Apps Native**: Built specifically for Azure Container Apps with proper scaling
+- **🏗️ Infrastructure as Code**: Terraform with Azure Verified Modules for best practices
+- **🔄 Async Architecture**: Queue-based processing for reliable, scalable translations
+- **📊 Production Ready**: Includes monitoring, logging, and health checks
+- **💰 Cost Optimized**: Scale-to-zero capabilities and efficient resource sizing
+- **🚀 azd Compatible**: Perfect template for Azure Developer CLI community
+
+## Architecture
+
+- **Translation Agent**: A Flask web API that receives translation requests and queues them
+- **Translation Worker**: A background service that processes translation jobs from the queue
+- **Azure Storage Queue**: Message queue system for asynchronous job processing
+- **Azure AI Translator**: Cognitive service for text translation
+- **Azure Container Apps**: Hosting platform for both services
+- **Managed Identity**: Secure authentication without keys
+
+## Other methods:
+
+## Prerequisites
+
+1. Azure subscription
+2. Azure CLI installed
+3. Azure Developer CLI (azd) installed
+4. Docker Desktop installed and running
+5. Git installed
+
 ## 🚀 Quick Deploy with Azure Developer CLI
 
 Deploy this entire solution to Azure with just two commands:
@@ -25,45 +64,6 @@ That's it! The `azd up` command will:
 
 **Total deployment time: ~5-10 minutes**
 
-## ✨ What Makes This Template Special
-
-- **🎯 Complete End-to-End Solution**: Web GUI + API + Background Worker + AI Translation
-- **🔒 Security First**: Zero API keys - 100% Managed Identity authentication
-- **📦 Container Apps Native**: Built specifically for Azure Container Apps with proper scaling
-- **🏗️ Infrastructure as Code**: Terraform with Azure Verified Modules for best practices
-- **🔄 Async Architecture**: Queue-based processing for reliable, scalable translations
-- **📊 Production Ready**: Includes monitoring, logging, and health checks
-- **💰 Cost Optimized**: Scale-to-zero capabilities and efficient resource sizing
-- **🚀 azd Compatible**: Perfect template for Azure Developer CLI community
-
-## Architecture
-
-- **Translation Agent**: A Flask web API that receives translation requests and queues them
-- **Translation Worker**: A background service that processes translation jobs from the queue
-- **Azure Storage Queue**: Message queue system for asynchronous job processing
-- **Azure AI Translator**: Cognitive service for text translation
-- **Azure Container Apps**: Hosting platform for both services
-- **Managed Identity**: Secure authentication without keys
-
-## Prerequisites
-
-1. Azure subscription
-2. Azure CLI installed
-3. Azure Developer CLI (azd) installed
-4. Docker Desktop installed and running
-5. Git installed
-
-## Deployment Steps
-
-### Clone the Repository
-
-First, clone this repository to your local machine:
-
-```bash
-git clone https://github.com/passadis/azure-a2a-translation.git
-cd azure-a2a-translation
-```
-
 ### Start Docker
 
 Make sure Docker Desktop is running before deployment:
@@ -74,7 +74,7 @@ Make sure Docker Desktop is running before deployment:
 docker --version
 ```
 
-### Option 1: One-Command Deployment (Recommended)
+### Deploy the Application
 
 ```bash
 azd auth login
@@ -83,50 +83,7 @@ azd up
 
 The `azd up` command handles everything automatically - infrastructure provisioning and application deployment in one go!
 
-### Option 2: Step-by-Step Deployment
-
-If you prefer to see each step:
-
-### 1. Initialize Azure Developer CLI
-
-```bash
-azd auth login
-azd init
-```
-
-### 2. Set Environment Variables (Optional)
-
-```bash
-azd env set AZURE_LOCATION northeurope  # Default: westeurope
-```
-
-### 3. Deploy Infrastructure
-
-```bash
-azd provision
-```
-
-This will:
-- Create a resource group in North Europe
-- Deploy Azure Container Registry
-- Deploy Azure Storage Account with queues
-- Deploy Azure AI Translator service
-- Deploy Container App Environment
-- Set up Managed Identity and RBAC permissions
-- Create Log Analytics workspace for monitoring
-
-### 4. Build and Deploy Applications
-
-```bash
-azd deploy
-```
-
-This will:
-- Build Docker images for both services
-- Push images to Azure Container Registry
-- Deploy Container Apps with the built images
-
-### 5. Verify Deployment
+### Verify Deployment
 
 Check the deployment status:
 ```bash
@@ -142,6 +99,43 @@ Access your deployed application:
 - **Web GUI**: Open `WEB_GUI_URL` in your browser for the translation interface
 - **Translation API**: Use `TRANSLATION_AGENT_URL` for direct API access
 - **Agent Discovery**: Get agent capabilities at `TRANSLATION_AGENT_URL/agent-card`
+
+## Alternative Deployment Methods
+
+### Option 1: Step-by-Step Deployment
+
+If you prefer to see each step after initializing with `azd init --template`:
+
+```bash
+# 1. Set Environment Variables (Optional)
+azd env set AZURE_LOCATION northeurope  # Default: westeurope
+
+# 2. Deploy Infrastructure
+azd provision
+
+# 3. Build and Deploy Applications
+azd deploy
+
+# 4. Verify Deployment
+azd show
+```
+
+### Option 2: Clone Repository (Traditional Method)
+
+If you prefer to clone the repository directly:
+
+```bash
+# Clone the repository
+git clone https://github.com/passadis/azure-a2a-translation.git
+cd azure-a2a-translation
+
+# Ensure Docker is running
+docker --version
+
+# Deploy everything
+azd auth login
+azd up
+```
 
 ## Usage
 
