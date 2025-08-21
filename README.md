@@ -292,10 +292,6 @@ This template delivers a genuinely asynchronous Agent-to-Agent experience:
 - **Issue**: Web GUI build fails due to missing static directory
 - **Solution**: The static directory and basic files are now included in the repository. If missing, they will be created automatically during build.
 
-### Check Container Logs
-```bash
-azd logs
-```
 
 ### Verify Queue Messages
 Use Azure Storage Explorer or Azure Portal to check queue status

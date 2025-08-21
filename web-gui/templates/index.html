@@ -4,60 +4,41 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>A2A Translation Client</title>
+        <link rel="stylesheet" href="/static/css/style.css">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <style>
-        body { background-color: #f4f7f6; }
-        .container { max-width: 800px; margin-top: 50px; }
-        .card { box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        .card-header { background-color: #007bff; color: white; }
-        .card-body { position: relative; }
-        #loading-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(255, 255, 255, 0.8);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 10;
-        }
-        #clear-history-btn {
-            background-color: #ffffff;
-            border: 2px solid #6c757d;
-            color: #495057;
-            font-weight: 500;
-            transition: all 0.2s ease;
-        }
-        #clear-history-btn:hover {
-            background-color: #e9ecef;
-            border-color: #495057;
-            color: #212529;
-        }
-    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <div class="container">
-        <div class="card">
-            <h5 class="card-header">A2A Translation Service GUI</h5>
-            <div class="card-body">
-                <div id="loading-overlay">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="sr-only">Loading...</span>
-                    </div>
-                    <span class="ml-3">Submitting task...</span>
+    <div class="floating-elements" aria-hidden="true">
+        <div class="floating-element"></div>
+        <div class="floating-element"></div>
+        <div class="floating-element"></div>
+        <div class="floating-element"></div>
+    </div>
+
+    <div class="main-container">
+        <div class="header-card text-center">
+            <h1><i class="fa-solid fa-language logo-icon"></i> A2A Translation</h1>
+            <p>Upload a text file and get a translated result — powered by the A2A translation worker.</p>
+        </div>
+
+        <div class="form-card">
+            <div class="card-body position-relative">
+                <div id="loading-overlay" class="loading-container">
+                    <div class="spinner" role="status" aria-hidden="true"></div>
+                    <div class="loading-text">Submitting task<span class="loading-dots">...</span></div>
                 </div>
+
                 <form id="translate-form" enctype="multipart/form-data">
                     <div class="form-group">
-                        <label for="file-to-upload"><strong>Select a .txt file to translate:</strong></label>
-                        <div class="custom-file">
-                            <input type="file" class="custom-file-input" id="file-to-upload" required>
-                            <label class="custom-file-label" for="file-to-upload">Choose file</label>
+                        <label for="file-to-upload"><i class="fa-solid fa-file-arrow-up"></i>&nbsp;<strong>Select a .txt file to translate:</strong></label>
+                        <div>
+                            <input type="file" id="file-to-upload" required class="form-control-file">
                         </div>
                     </div>
+
                     <div class="form-group">
-                        <label for="target-language"><strong>Translate To:</strong></label>
+                        <label for="target-language"><i class="fa-solid fa-flag"></i>&nbsp;<strong>Translate To:</strong></label>
                         <select class="form-control" id="target-language">
                             <option value="es">Spanish</option>
                             <option value="fr">French</option>
@@ -65,19 +46,20 @@
                             <option value="el">Greek</option>
                         </select>
                     </div>
-                    <button type="submit" id="translate-btn" class="btn btn-primary btn-block">Translate File</button>
+
+                    <button type="submit" id="translate-btn" class="btn btn-primary btn-block"><i class="fa-solid fa-paper-plane"></i>&nbsp;<span id="translate-btn-text">Translate File</span></button>
                 </form>
             </div>
         </div>
-        
-        <div class="card mt-4">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Translation History</h5>
-                <button type="button" class="btn btn-sm btn-outline-secondary" id="clear-history-btn">Clear History</button>
+
+        <div class="response-card">
+            <div class="response-header d-flex justify-content-between align-items-center">
+                <h4><i class="fa-solid fa-clock-rotate-left"></i>&nbsp;Translation History</h4>
+                <button type="button" class="btn btn-outline-secondary" id="clear-history-btn"><i class="fa-solid fa-trash-can"></i>&nbsp;Clear</button>
             </div>
-            <div class="card-body">
-                <ul class="list-group" id="history-list">
-                    <li class="list-group-item text-muted">No completed translations yet.</li>
+            <div class="response-area card-body">
+                <ul class="history-list" id="history-list">
+                    <li class="history-item text-muted">No completed translations yet.</li>
                 </ul>
             </div>
         </div>
@@ -85,17 +67,27 @@
 
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script>
-        // Update the file input label with the selected file name
-        $('#file-to-upload').on('change', function() {
-            var fileName = $(this).val().split('\\').pop();
-            $(this).next('.custom-file-label').html(fileName || 'Choose file');
+        // --- UI Elements ---
+        const fileInput = document.getElementById('file-to-upload');
+        const translateBtn = document.getElementById('translate-btn');
+        const translateBtnText = document.getElementById('translate-btn-text');
+        const form = document.getElementById('translate-form');
+        const overlay = document.getElementById('loading-overlay');
+        const historyList = document.getElementById('history-list');
+
+        // --- Event Listeners ---
+
+        // Update file input display
+        fileInput.addEventListener('change', () => {
+            const fileName = fileInput.files && fileInput.files[0] ? fileInput.files[0].name : 'Choose file';
+            // The visual representation is now handled by the browser's default UI for form-control-file
         });
 
         // Handle form submission
-        $('#translate-form').on('submit', async function(event) {
+        form.addEventListener('submit', async function(event) {
             event.preventDefault();
+            console.log('Form submission started');
 
-            const fileInput = document.getElementById('file-to-upload');
             const targetLanguage = document.getElementById('target-language').value;
             const file = fileInput.files[0];
 
@@ -104,117 +96,172 @@
                 return;
             }
 
-            // Create a FormData object to send the file
             const formData = new FormData();
             formData.append('file', file);
             formData.append('language', targetLanguage);
 
-            // --- Show loading state ---
-            const overlay = document.getElementById('loading-overlay');
-            overlay.style.display = 'flex';
+            // Show loading state
+            console.log('Showing loading state');
+            showLoadingState();
 
             try {
-                // Send the file to the GUI backend to initiate the task
+                console.log('Sending request to /upload-and-translate');
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+                
                 const response = await fetch('/upload-and-translate', {
                     method: 'POST',
                     body: formData,
+                    signal: controller.signal
                 });
+                
+                clearTimeout(timeoutId);
 
-                const data = await response.json();
+                console.log('Response received:', response.status, response.statusText);
 
-                if (response.ok) {
-                    if (data.status === 'pending') {
-                        // The task has been submitted successfully, now start polling
-                        const task_id = data.task_id;
-                        
-                        // Hide loading overlay immediately - this enables true non-blocking UX!
-                        overlay.style.display = 'none';
-                        
-                        // Reset form to allow immediate new submissions
-                        document.getElementById('translate-form').reset();
-                        document.querySelector('.custom-file-label').innerHTML = 'Choose file';
-                        
-                        startPolling(task_id, file.name, targetLanguage);
-                    } else {
-                        // Handle errors from the backend
-                        alert(`Error from server: ${data.error}`);
-                        overlay.style.display = 'none';
-                    }
-                } else {
-                    alert(`Server error: ${data.error}`);
-                    overlay.style.display = 'none';
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
 
+                const data = await response.json();
+                console.log('Response data:', data);
+
+                if (data.status === 'pending' && data.task_id) {
+                    // Task submitted successfully, start polling
+                    console.log('Task submitted, hiding loading state');
+                    hideLoadingState();
+                    form.reset();
+                    
+                    startPolling(data.task_id, file.name, targetLanguage);
+                } else {
+                    // Handle errors
+                    console.log('Unexpected response format:', data);
+                    throw new Error(data.error || data.message || 'Unknown error from server');
+                }
             } catch (error) {
-                console.error('Fetch Error:', error);
-                alert('Fatal Error: Could not communicate with the GUI backend.');
-                overlay.style.display = 'none';
+                console.error('Submission Error:', error);
+                let errorMessage = error.message;
+                if (error.name === 'AbortError') {
+                    errorMessage = 'Request timed out. Please try again.';
+                }
+                alert(`Error: ${errorMessage}`);
+                console.log('Hiding loading state due to error');
+                hideLoadingState();
             }
         });
 
-        // --- Polling function ---
-        async function startPolling(taskId, fileName, targetLanguage) {
-            const historyList = document.getElementById('history-list');
-            const listItemId = `task-${taskId}`;
-            
-            // Add a placeholder to the history list
-            const placeholder = document.createElement('li');
-            placeholder.className = 'list-group-item';
-            placeholder.id = listItemId;
-            placeholder.innerHTML = `<strong>${fileName}</strong> - Translating to <strong>${targetLanguage.toUpperCase()}</strong>... <span class="spinner-border spinner-border-sm text-info" role="status"></span>`;
-            historyList.prepend(placeholder);
-            
-            if (historyList.lastElementChild.textContent === 'No completed translations yet.') {
-                historyList.lastElementChild.remove();
-            }
+        // Clear history button
+        document.getElementById('clear-history-btn').addEventListener('click', function() {
+            historyList.innerHTML = '<li class="history-item text-muted">No completed translations yet.</li>';
+        });
 
-            const pollInterval = 3000; // Poll every 3 seconds
+        // --- Functions ---
+
+        function showLoadingState() {
+            overlay.style.display = 'flex';
+            translateBtn.classList.add('loading');
+            translateBtn.disabled = true;
+            translateBtnText.textContent = 'Submitting...';
+        }
+
+        function hideLoadingState() {
+            overlay.style.display = 'none';
+            translateBtn.classList.remove('loading');
+            translateBtn.disabled = false;
+            translateBtnText.textContent = 'Translate File';
+        }
+
+        async function startPolling(taskId, fileName, targetLanguage) {
+            const listItemId = `task-${taskId}`;
+            let pollCount = 0;
+            const maxPolls = 60; // 3 minutes max (60 polls * 3 seconds)
+            
+            // Add placeholder to history
+            const placeholder = document.createElement('li');
+            placeholder.className = 'history-item';
+            placeholder.id = listItemId;
+            placeholder.innerHTML = `
+                <div class="item-icon"><i class="fa-solid fa-hourglass-half"></i></div>
+                <div class="item-details">
+                    <strong>${fileName}</strong> - Translating to <strong>${targetLanguage.toUpperCase()}</strong>...
+                </div>
+                <div class="spinner-border spinner-border-sm text-info ml-auto" role="status"></div>`;
+            
+            if (historyList.querySelector('.text-muted')) {
+                historyList.innerHTML = ''; // Clear "No translations" message
+            }
+            historyList.prepend(placeholder);
+
+            const pollInterval = 3000; // 3 seconds
 
             const poll = setInterval(async () => {
-                const response = await fetch(`/get-task-status/${taskId}`);
-                const data = await response.json();
+                pollCount++;
+                
+                // Timeout check
+                if (pollCount > maxPolls) {
+                    clearInterval(poll);
+                    const resultItem = document.getElementById(listItemId);
+                    if (resultItem) {
+                        resultItem.innerHTML = `
+                            <div class="item-icon failure"><i class="fa-solid fa-times-circle"></i></div>
+                            <div class="item-details">
+                                <strong class="text-danger">${fileName}</strong> - Translation timed out after 3 minutes
+                            </div>`;
+                    }
+                    return;
+                }
 
-                if (response.ok && data.status === 'completed') {
-                    // Task is completed, stop polling
-                    clearInterval(poll);
+                try {
+                    const response = await fetch(`/get-task-status/${taskId}`);
                     
-                    // Update the list item with the result
-                    const resultItem = document.getElementById(listItemId);
-                    resultItem.innerHTML = `<strong>${fileName}</strong> - Translation to <strong>${targetLanguage.toUpperCase()}</strong>:
-                        <pre class="mt-2 p-2 bg-light border">${data.artifact_content}</pre>`;
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
                     
-                    // Limit history to 5 items
-                    limitHistoryItems();
+                    const data = await response.json();
+
+                    if (data.status === 'completed') {
+                        clearInterval(poll);
+                        const resultItem = document.getElementById(listItemId);
+                        if (resultItem) {
+                            resultItem.innerHTML = `
+                                <div class="item-icon success"><i class="fa-solid fa-check-circle"></i></div>
+                                <div class="item-details">
+                                    <strong>${fileName}</strong> - Translation to <strong>${targetLanguage.toUpperCase()}</strong>:
+                                    <pre class="mt-2 p-2 bg-light border rounded">${data.artifact_content || 'No content returned'}</pre>
+                                </div>`;
+                        }
+                    } else if (data.status === 'error' || data.status === 'failed' || data.status === 'not_found') {
+                        clearInterval(poll);
+                        const resultItem = document.getElementById(listItemId);
+                        if (resultItem) {
+                            resultItem.innerHTML = `
+                                <div class="item-icon failure"><i class="fa-solid fa-times-circle"></i></div>
+                                <div class="item-details">
+                                    <strong class="text-danger">${fileName}</strong> - Translation failed: ${data.message || data.error || 'Unknown error'}
+                                </div>`;
+                        }
+                    }
+                    // If status is 'pending' or any other status, continue polling
+                } catch (error) {
+                    console.error('Polling error:', error);
+                    pollCount++; // Count errors towards timeout
                     
-                } else if (data.status === 'error' || data.status === 'failed' || data.status === 'not_found') {
-                    // Task failed or was not found, stop polling
-                    clearInterval(poll);
-                    
-                    const resultItem = document.getElementById(listItemId);
-                    resultItem.innerHTML = `<strong class="text-danger">${fileName}</strong> - Translation failed: ${data.message || data.error}`;
-                    
-                    // Limit history to 5 items
-                    limitHistoryItems();
+                    // Stop polling after 5 consecutive errors
+                    if (pollCount > 5) {
+                        clearInterval(poll);
+                        const resultItem = document.getElementById(listItemId);
+                        if (resultItem) {
+                            resultItem.innerHTML = `
+                                <div class="item-icon failure"><i class="fa-solid fa-times-circle"></i></div>
+                                <div class="item-details">
+                                    <strong class="text-danger">${fileName}</strong> - Connection error during polling
+                                </div>`;
+                        }
+                    }
                 }
             }, pollInterval);
         }
-
-        // Limit history to 5 items
-        function limitHistoryItems() {
-            const historyList = document.getElementById('history-list');
-            const items = historyList.children;
-            
-            // Remove excess items (keep max 5, plus the "no translations" placeholder)
-            while (items.length > 6) {
-                historyList.removeChild(items[items.length - 1]);
-            }
-        }
-
-        // Clear history button functionality
-        document.getElementById('clear-history-btn').addEventListener('click', function() {
-            const historyList = document.getElementById('history-list');
-            historyList.innerHTML = '<li class="list-group-item text-muted">No completed translations yet.</li>';
-        });
     </script>
 </body>
 </html>
