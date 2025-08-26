@@ -57,6 +57,28 @@ azd init --template passadis/azure-a2a-translation
 
 > **💡 GitHub Codespaces Ready**: This template includes a complete dev container configuration with azd pre-installed. Open in Codespaces and run `azd auth login && azd up` - no local setup required!
 
+## 🌐 GitHub Codespaces - Zero Setup Deployment
+
+This template is fully configured for **GitHub Codespaces**, providing a complete cloud development environment with zero local setup required. The dev container includes:
+
+- **Azure Developer CLI (azd)** - Pre-installed and ready to use
+- **Azure CLI** - For Azure authentication and resource management  
+- **Docker** - For container building and deployment
+- **Python 3.11** - With all project dependencies
+- **VS Code Extensions** - Essential tools for Azure development
+
+### Using Codespaces:
+
+1. **Click the "Open in GitHub Codespaces" badge** above or visit the repository
+2. **Create a new Codespace** - The environment will automatically configure itself
+3. **Deploy to Azure** with just two commands:
+   ```bash
+   azd auth login
+   azd up
+   ```
+
+No need to install anything locally - everything runs in the cloud! Perfect for developers who want to try the template quickly or work from any device.
+
 ## 🚀 Quick Deploy with Azure Developer CLI
 
 Deploy this entire solution to Azure with just two commands:
