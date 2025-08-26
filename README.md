@@ -6,6 +6,11 @@
 
 <h1 align="center">Translation A2A Service - Azure Deployment</h1>
 
+<p align="center">
+  <a href="https://codespaces.new/passadis/azure-a2a-translation"><img src="https://img.shields.io/badge/Open%20in-GitHub%20Codespaces-blue?logo=github" alt="Open in GitHub Codespaces"></a>
+  <a href="https://learn.microsoft.com/azure/developer/azure-developer-cli/overview"><img src="https://img.shields.io/badge/Azure%20Developer%20CLI-Ready-orange?logo=microsoft-azure" alt="Azure Developer CLI Ready"></a>
+</p>
+
 ![a2a-main](https://github.com/user-attachments/assets/95145d93-3365-455e-9f86-7af365e785b7)
 
 
@@ -49,6 +54,8 @@ azd init --template passadis/azure-a2a-translation
 3. Azure Developer CLI (azd) installed
 4. Docker Desktop installed and running
 5. Git installed
+
+> **💡 GitHub Codespaces Ready**: This template includes a complete dev container configuration with azd pre-installed. Open in Codespaces and run `azd auth login && azd up` - no local setup required!
 
 ## 🚀 Quick Deploy with Azure Developer CLI
 

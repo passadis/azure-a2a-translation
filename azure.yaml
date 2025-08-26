@@ -14,16 +14,20 @@ services:
     language: python
     docker:
       path: translation-agent.Dockerfile
+      remoteBuild: true
   translation-worker:
     project: .
     host: containerapp
     language: python
     docker:
       path: translation-worker.Dockerfile
+      remoteBuild: true
   web-gui:
     project: ./web-gui
     host: containerapp
     language: python
+    docker:
+      remoteBuild: true
 
 hooks:
   preprovision:
