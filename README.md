@@ -62,7 +62,8 @@ azd init --template passadis/azure-a2a-translation
 This template is fully configured for **GitHub Codespaces**, providing a complete cloud development environment with zero local setup required. The dev container includes:
 
 - **Azure Developer CLI (azd)** - Pre-installed and ready to use
-- **Azure CLI** - For Azure authentication and resource management  
+- **Azure CLI** - For Azure authentication and resource management
+- **Terraform** - For infrastructure as code deployment
 - **Docker** - For container building and deployment
 - **Python 3.11** - With all project dependencies
 - **VS Code Extensions** - Essential tools for Azure development
