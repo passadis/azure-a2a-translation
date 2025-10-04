@@ -422,3 +422,7 @@ To remove all resources:
 ```bash
 azd down
 ```
+
+---
+
+**Made with ❤️ by [Konstantinos Passadis](https://github.com/passadis)**
