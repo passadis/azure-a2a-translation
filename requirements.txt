@@ -5,3 +5,5 @@ azure-storage-queue==12.7.0
 azure-storage-blob==12.17.0
 azure-identity==1.14.0
 azure-core==1.28.0
+json-rpc==1.15.0
+jsonrpclib-pelix==0.4.3.2

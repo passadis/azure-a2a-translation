@@ -3,3 +3,5 @@ requests==2.31.0
 azure-identity==1.15.0
 azure-storage-blob==12.19.0
 gunicorn==21.2.0
+json-rpc==1.15.0
+jsonrpclib-pelix==0.4.3.2

@@ -4,6 +4,7 @@ import os
 import uuid
 import requests
 import logging
+from datetime import datetime
 from dotenv import load_dotenv
 from azure.storage.queue import QueueServiceClient
 from azure.storage.blob import BlobServiceClient
@@ -51,6 +52,37 @@ def get_blob_service_client():
         logger.error(f"Failed to create blob service client: {e}")
         raise
 
+# A2A Protocol Helper Functions
+def create_a2a_task(task_id, status_state="submitted", message_content=None):
+    """Create A2A Protocol compliant Task object"""
+    task = {
+        "id": task_id,
+        "contextId": str(uuid.uuid4()),  # Server-generated context ID
+        "status": {
+            "state": status_state,
+            "timestamp": datetime.utcnow().isoformat() + "Z"
+        },
+        "artifacts": [],
+        "history": [],
+        "metadata": {},
+        "kind": "task"
+    }
+    
+    if message_content:
+        task["status"]["message"] = create_a2a_message("agent", message_content)
+    
+    return task
+
+def create_a2a_message(role, content, task_id=None):
+    """Create A2A Protocol compliant Message object"""
+    return {
+        "role": role,
+        "parts": [{"kind": "text", "text": content}],
+        "messageId": str(uuid.uuid4()),
+        "taskId": task_id,
+        "kind": "message"
+    }
+
 def translate_text_with_azure(text, target_language="el"):
     """
     Calls the Azure AI Translator service to translate text using managed identity.
@@ -96,54 +128,100 @@ def translate_text_with_azure(text, target_language="el"):
         raise
 
 def process_queue_message(queue_client, message):
-    """
-    Process a single message from the queue.
-    """
+    """Process queue message and create A2A compliant results"""
     try:
         # Parse the message content
         task_data = json.loads(message.content)
         task_id = task_data["task_id"]
         document_content = task_data["document_content"]
         target_language = task_data["target_language"]
+        message_id = task_data.get("message_id")
         
-        logger.info(f"Processing task {task_id}...")
+        logger.info(f"Processing A2A task {task_id}...")
         
-        # Translate the text
+        # Translate the text (existing logic)
         translated_text = translate_text_with_azure(document_content, target_language)
         
-        # Prepare result
-        result_payload = {
+        # Create A2A compliant result
+        task_result = create_a2a_task(task_id, "completed")
+        
+        # Add artifact with translation result
+        artifact = {
+            "artifactId": str(uuid.uuid4()),
+            "name": "Translation Result",
+            "description": f"Text translated to {target_language}",
+            "parts": [
+                {
+                    "kind": "text",
+                    "text": translated_text,
+                    "metadata": {
+                        "source_language": "auto-detected",
+                        "translation_service": "azure-translator"
+                    }
+                }
+            ],
+            "metadata": {
+                "target_language": target_language,
+                "translation_service": "azure-translator",
+                "processed_at": datetime.utcnow().isoformat() + "Z",
+                "worker_id": os.environ.get('HOSTNAME', 'unknown'),
+                "original_message_id": message_id
+            }
+        }
+        
+        task_result["artifacts"] = [artifact]
+        
+        # Add completion message to task
+        task_result["status"]["message"] = create_a2a_message(
+            "agent", 
+            f"Translation to {target_language} completed successfully", 
+            task_id
+        )
+        
+        # Also create legacy format result for backward compatibility
+        legacy_result = {
             "task_id": task_id,
             "status": "completed",
             "artifact_content": translated_text,
-            "processed_at": time.time()
+            "target_language": target_language,
+            "processed_at": datetime.utcnow().isoformat() + "Z"
         }
         
-        # Save result to blob storage
+        # Save both A2A compliant result and legacy result
         blob_service_client = get_blob_service_client()
         container_name = "translation-results"
-        blob_name = f"{task_id}.json"
+        
+        # Ensure container exists
         try:
             blob_service_client.create_container(container_name)
         except ResourceExistsError:
             pass
-        blob_client = blob_service_client.get_blob_client(container=container_name, blob=blob_name)
-        result_json = json.dumps(result_payload, indent=2)
-        blob_client.upload_blob(result_json, overwrite=True)
+        
+        # Save A2A format result
+        a2a_blob_name = f"{task_id}.json"
+        a2a_result_json = json.dumps(task_result, indent=2)
+        a2a_blob_client = blob_service_client.get_blob_client(container=container_name, blob=a2a_blob_name)
+        a2a_blob_client.upload_blob(a2a_result_json, overwrite=True)
+        
+        # Save legacy format result for backward compatibility
+        legacy_blob_name = f"{task_id}-legacy.json"
+        legacy_result_json = json.dumps(legacy_result, indent=2)
+        legacy_blob_client = blob_service_client.get_blob_client(container=container_name, blob=legacy_blob_name)
+        legacy_blob_client.upload_blob(legacy_result_json, overwrite=True)
 
-        # Send result to translation-results queue
+        # Send A2A result to translation-results queue
         queue_service_client = get_queue_service_client()
         results_queue_client = queue_service_client.get_queue_client(TRANSLATION_RESULTS_QUEUE)
         try:
             results_queue_client.create_queue()
         except ResourceExistsError:
             pass
-        results_queue_client.send_message(result_json)
+        results_queue_client.send_message(a2a_result_json)
 
         # Delete the processed message from the jobs queue
         queue_client.delete_message(message.id, message.pop_receipt)
 
-        logger.info(f"Task {task_id} completed successfully, saved to blob storage, and sent to results queue")
+        logger.info(f"A2A Task {task_id} completed successfully - A2A and legacy formats saved")
         
     except json.JSONDecodeError as e:
         logger.error(f"Invalid message format: {e}")
@@ -151,7 +229,7 @@ def process_queue_message(queue_client, message):
         queue_client.delete_message(message.id, message.pop_receipt)
         
     except Exception as e:
-        logger.error(f"Error processing message: {e}")
+        logger.error(f"Error processing A2A task: {e}")
         # Message will become visible again after visibility timeout
         # In a production system, you might want to implement dead letter queue logic
 

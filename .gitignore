@@ -3,8 +3,10 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
-*.env
-.env
+# Allow .env template, ignore local variations
+.env.local
+.env.production
+.env.development
 .venv/
 venv/
 env/
@@ -55,3 +57,6 @@ yarn-error.log*
 # Web GUI static files (if generated)
 web-gui/static/*.tmp
 web-gui/static/*.log
+A2A_COMPLIANCE.md 
+test*
+a2a.md
