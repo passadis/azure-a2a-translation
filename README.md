@@ -27,8 +27,9 @@ azd init --template passadis/azure-a2a-translation
 
 ## ✨ What Makes This Template Special
 
-- **� A2A Protocol Compliant**: Fully compliant with Agent-to-Agent Protocol v0.2.5
-- **�🎯 Complete End-to-End Solution**: Web GUI + API + Background Worker + AI Translation
+- **🏆 Pure A2A Protocol Implementation**: Fully compliant with Agent-to-Agent Protocol v0.2.5
+- **🚀 JSON-RPC 2.0 First**: Primary transport layer for inter-agent communication
+- **⚡ Complete End-to-End Solution**: Web GUI + A2A API + Background Worker + AI Translation
 - **🔒 Security First**: Zero API keys - 100% Managed Identity authentication
 - **📦 Container Apps Native**: Built specifically for Azure Container Apps with proper scaling
 - **🏗️ Infrastructure as Code**: Terraform with Azure Verified Modules for best practices
@@ -139,8 +140,8 @@ azd env get-values
 
 Access your deployed application:
 - **Web GUI**: Open `WEB_GUI_URL` in your browser for the translation interface
-- **Translation API**: Use `TRANSLATION_AGENT_URL` for direct API access
-- **Agent Discovery**: Get agent capabilities at `TRANSLATION_AGENT_URL/agent-card`
+- **A2A Protocol API**: Use `TRANSLATION_AGENT_URL` for JSON-RPC 2.0 agent communication
+- **Agent Discovery**: Get agent capabilities at `TRANSLATION_AGENT_URL/.well-known/agent.json` (A2A standard)
 
 ## Alternative Deployment Methods
 
