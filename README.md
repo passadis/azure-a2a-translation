@@ -415,7 +415,6 @@ python a2a_client_example.py https://your-translation-agent-url "Hello world" es
 - ✅ **Protocol Version**: A2A Protocol v0.2.5 compliant
 - ✅ **Interoperability**: Works with any A2A-compliant client or agent
 
-For detailed A2A information, see [A2A_COMPLIANCE.md](A2A_COMPLIANCE.md).
 
 ## Cleanup
 
