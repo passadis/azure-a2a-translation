@@ -96,6 +96,7 @@ resource "azurerm_resource_group" "main" {
   
   tags = {
     "azd-env-name" = var.environment_name
+    "SecurityControl" = "Ignore"
   }
 }
 
@@ -107,6 +108,7 @@ resource "azurerm_user_assigned_identity" "main" {
   
   tags = {
     "azd-env-name" = var.environment_name
+    "SecurityControl" = "Ignore"
   }
 }
 
@@ -125,6 +127,7 @@ resource "azurerm_storage_account" "main" {
   
   tags = {
     "azd-env-name" = var.environment_name
+    "SecurityControl" = "Ignore"
   }
 }
 
@@ -178,6 +181,7 @@ resource "azurerm_cognitive_account" "translator" {
   
   tags = {
     "azd-env-name" = var.environment_name
+    "SecurityControl" = "Ignore"
   }
 }
 
@@ -198,6 +202,7 @@ resource "azurerm_log_analytics_workspace" "main" {
   
   tags = {
     "azd-env-name" = var.environment_name
+    "SecurityControl" = "Ignore"
   }
 }
 
@@ -211,6 +216,7 @@ resource "azurerm_container_registry" "main" {
   
   tags = {
     "azd-env-name" = var.environment_name
+    "SecurityControl" = "Ignore"
   }
 }
 
@@ -230,6 +236,7 @@ resource "azurerm_container_app_environment" "main" {
   
   tags = {
     "azd-env-name" = var.environment_name
+    "SecurityControl" = "Ignore"
   }
 }
 
@@ -306,6 +313,7 @@ resource "azurerm_container_app" "translation_agent" {
   tags = {
     "azd-env-name"      = var.environment_name
     "azd-service-name"  = "translation-agent"
+    "SecurityControl"   = "Ignore"
   }
 }
 
@@ -377,6 +385,7 @@ resource "azurerm_container_app" "translation_worker" {
   tags = {
     "azd-env-name"      = var.environment_name
     "azd-service-name"  = "translation-worker"
+    "SecurityControl"   = "Ignore"
   }
 }
 
@@ -438,6 +447,7 @@ resource "azurerm_container_app" "web_gui" {
   tags = {
     "azd-env-name"      = var.environment_name
     "azd-service-name"  = "web-gui"
+    "SecurityControl"   = "Ignore"
   }
 }
 
